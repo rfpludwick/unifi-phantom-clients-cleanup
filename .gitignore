@@ -5,6 +5,9 @@ configuration.json
 ## Go Common
 
 # Binaries for programs and plugins
+
+main
+unifi-phantom-clients-cleanup
 *.exe
 *.exe~
 *.dll

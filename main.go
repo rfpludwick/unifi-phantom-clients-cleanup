@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
+	"os"
+
+	"github.com/pborman/getopt/v2"
 )
 
 type configuration struct {
@@ -15,85 +19,203 @@ type configuration struct {
 	Password string
 }
 
+var (
+	showHelp              = false
+	configurationFilename = "configuration.json"
+)
+
+func init() {
+	getopt.FlagLong(&showHelp, "help", 'h', "Show help")
+	getopt.FlagLong(&configurationFilename, "config", 'c', "Path to the configuration file")
+}
+
 func main() {
-	configurationFileData, err := ioutil.ReadFile("configuration.json")
+	os.Exit(exec())
+}
 
-	if err != nil {
-		fmt.Println("Error reading configuration JSON:", err)
+func exec() int {
+	getopt.Parse()
 
-		return
+	if showHelp {
+		getopt.Usage()
+
+		return 0
 	}
 
-	c := configuration{}
+	configurationFileData, err := ioutil.ReadFile(configurationFilename)
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error reading configuration JSON:", err)
+
+		return 1
+	}
+
+	var c configuration
 
 	err = json.Unmarshal(configurationFileData, &c)
 
 	if err != nil {
-		fmt.Println("Error decoding configuration JSON:", err)
+		fmt.Fprintln(os.Stderr, "Error decoding configuration JSON:", err)
 
-		return
+		return 1
 	}
 
-	requestBody, err := json.Marshal(map[string]string{
-		"username": c.Username,
-		"password": c.Password,
+	cookieJar, err := cookiejar.New(nil)
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error setting up HTTP cookie jar:", err)
+
+		return 1
+	}
+
+	httpClient := &http.Client{
+		Jar: cookieJar,
+	}
+
+	requestBodyLogin, err := json.Marshal(unifiRequestLogin{
+		Username: c.Username,
+		Password: c.Password,
 	})
 
 	if err != nil {
-		fmt.Println("Error preparing UniFi request:", err)
+		fmt.Fprintln(os.Stderr, "Error encoding JSON for UniFi login:", err)
 
-		return
+		return 1
 	}
 
-	httpResponse, err := http.Post(c.Host+"/api/login", "application/json", bytes.NewBuffer(requestBody))
+	httpResponse, err := httpClient.Post(c.Host+"/api/login", "application/json", bytes.NewBuffer(requestBodyLogin))
 
 	if err != nil {
-		fmt.Println("Error communicating with UniFi host:", err)
+		fmt.Fprintln(os.Stderr, "Error communicating host for UniFi login:", err)
 
-		return
+		return 1
 	}
 
 	defer httpResponse.Body.Close()
 
-	responseBody, err := ioutil.ReadAll(httpResponse.Body)
+	responseBodyLogin, err := ioutil.ReadAll(httpResponse.Body)
 
 	if err != nil {
-		fmt.Println("Error reading UniFi response:", err)
+		fmt.Fprintln(os.Stderr, "Error reading UniFi login response:", err)
 
-		return
+		return 1
 	}
 
-	var response interface{}
+	responseLogin := unifiResponseBase{}
 
-	err = json.Unmarshal(responseBody, &response)
+	err = json.Unmarshal(responseBodyLogin, &responseLogin)
 
 	if err != nil {
-		fmt.Println("Error decoding UniFi response:", err)
+		fmt.Fprintln(os.Stderr, "Error decoding UniFi login response:", err)
 
-		return
+		return 1
 	}
 
-	meta, ok := response.(map[string]interface{})["meta"]
+	err = unifiResponseCheckMeta(responseLogin.Meta, responseBodyLogin)
 
-	if ok == false {
-		fmt.Println("Error with unexpected UniFi response; response:", string(responseBody))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 
-		return
+		return 1
 	}
 
-	rc, ok := meta.(map[string]interface{})["rc"]
+	httpResponse, err = httpClient.Get(c.Host + "/api/s/" + c.Site + "/stat/alluser")
 
-	if ok == false {
-		fmt.Println("Error with unexpected UniFi response; response:", string(responseBody))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error communicating host UniFi alluser:", err)
 
-		return
+		return 1
 	}
 
-	if rc != "ok" {
-		fmt.Println("UniFi login failed; response:", string(responseBody))
+	defer httpResponse.Body.Close()
 
-		return
+	responseBodyAllUser, err := ioutil.ReadAll(httpResponse.Body)
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error reading UniFi allsuer response:", err)
+
+		return 1
 	}
 
-	// todo need cookiejar from here
+	responseAllUser := unifiResponseAllUser{}
+
+	err = json.Unmarshal(responseBodyAllUser, &responseAllUser)
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error decoding UniFi alluser response:", err)
+
+		return 1
+	}
+
+	err = unifiResponseCheckMeta(responseAllUser.Meta, responseBodyAllUser)
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+
+		return 1
+	}
+
+	var macsToForget []string
+
+	for _, user := range responseAllUser.Data {
+		var sum = len(user.Name) + user.TxBytes + user.TxPackets + user.RxBytes + user.RxPackets + user.WifiTxAttempts + user.TxRetries
+
+		if sum == 0 {
+			macsToForget = append(macsToForget, user.Mac)
+		}
+	}
+
+	if len(macsToForget) > 0 {
+		requestStamgrForget := unifiRequestStamgrForget{
+			Macs: macsToForget,
+		}
+
+		requestStamgrForget.Init()
+
+		requestBodyStamgrForget, err := json.Marshal(requestStamgrForget)
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error encoding JSON for UniFi stamgr forget:", err)
+
+			return 1
+		}
+
+		httpResponse, err := httpClient.Post(c.Host+"/api/s/"+c.Site+"/cmd/stamgr", "application/json", bytes.NewBuffer(requestBodyStamgrForget))
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error communicating host for UniFi stamgr forget:", err)
+
+			return 1
+		}
+
+		defer httpResponse.Body.Close()
+
+		responseBodyStamgrForget, err := ioutil.ReadAll(httpResponse.Body)
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error reading UniFi stamgr forget response:", err)
+
+			return 1
+		}
+
+		responseStamgrForget := unifiResponseBase{}
+
+		err = json.Unmarshal(responseBodyStamgrForget, &responseStamgrForget)
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error decoding UniFi stamgr forget response:", err)
+
+			return 1
+		}
+
+		err = unifiResponseCheckMeta(responseStamgrForget.Meta, responseBodyStamgrForget)
+
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+
+			return 1
+		}
+	}
+
+	return 0
 }
