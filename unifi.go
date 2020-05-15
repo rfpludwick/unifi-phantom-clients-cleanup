@@ -9,7 +9,7 @@ type unifiRequestLogin struct {
 	Password string `json:"password"`
 }
 
-type unifiRequestStamgrForget struct {
+type unifiRequestStamgr struct {
 	Cmd  string   `json:"cmd"`
 	Macs []string `json:"macs"`
 }
@@ -49,8 +49,4 @@ func unifiResponseCheckMeta(u unifiResponseBaseMeta, responseBody []byte) error 
 	}
 
 	return nil
-}
-
-func (u *unifiRequestStamgrForget) Init() {
-	u.Cmd = "forget-sta"
 }

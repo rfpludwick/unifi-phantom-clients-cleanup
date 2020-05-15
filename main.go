@@ -166,16 +166,15 @@ func exec() int {
 	}
 
 	if len(macsToForget) > 0 {
-		requestStamgrForget := unifiRequestStamgrForget{
+		requestStamgrForget := unifiRequestStamgr{
+			Cmd:  "forget-sta",
 			Macs: macsToForget,
 		}
-
-		requestStamgrForget.Init()
 
 		requestBodyStamgrForget, err := json.Marshal(requestStamgrForget)
 
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error encoding JSON for UniFi stamgr forget:", err)
+			fmt.Fprintln(os.Stderr, "Error encoding JSON for UniFi stamgr:", err)
 
 			return 1
 		}
@@ -183,32 +182,32 @@ func exec() int {
 		httpResponse, err := httpClient.Post(c.Host+"/api/s/"+c.Site+"/cmd/stamgr", "application/json", bytes.NewBuffer(requestBodyStamgrForget))
 
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error communicating host for UniFi stamgr forget:", err)
+			fmt.Fprintln(os.Stderr, "Error communicating host for UniFi stamgr:", err)
 
 			return 1
 		}
 
 		defer httpResponse.Body.Close()
 
-		responseBodyStamgrForget, err := ioutil.ReadAll(httpResponse.Body)
+		responseBodyStamgr, err := ioutil.ReadAll(httpResponse.Body)
 
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error reading UniFi stamgr forget response:", err)
+			fmt.Fprintln(os.Stderr, "Error reading UniFi stamgr response:", err)
 
 			return 1
 		}
 
-		responseStamgrForget := unifiResponseBase{}
+		responseStamgr := unifiResponseBase{}
 
-		err = json.Unmarshal(responseBodyStamgrForget, &responseStamgrForget)
+		err = json.Unmarshal(responseBodyStamgr, &responseStamgr)
 
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error decoding UniFi stamgr forget response:", err)
+			fmt.Fprintln(os.Stderr, "Error decoding UniFi stamgr response:", err)
 
 			return 1
 		}
 
-		err = unifiResponseCheckMeta(responseStamgrForget.Meta, responseBodyStamgrForget)
+		err = unifiResponseCheckMeta(responseStamgr.Meta, responseBodyStamgr)
 
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
