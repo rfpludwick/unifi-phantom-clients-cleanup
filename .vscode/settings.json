@@ -1,0 +1,3 @@
+{
+	"window.title": "${activeEditorMedium}${dirty}${separator}UniFi Phantom Clients Cleanup${separator}${appName}"
+}
