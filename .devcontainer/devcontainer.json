@@ -1,0 +1,14 @@
+{
+	"image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu-20.04",
+	"postCreateCommand": "bash .devcontainer/provision.sh",
+	"containerEnv": {
+		"GOPATH": "/workspaces/unifi-phantom-clients-cleanup"
+	},
+	"extensions": [
+		"github.vscode-pull-request-github",
+		"eamodio.gitlens",
+		"golang.go",
+		"timonwong.shellcheck",
+		"davidanson.vscode-markdownlint"
+	]
+}
