@@ -16,6 +16,6 @@ go get -v golang.org/x/lint/golint
 go get -v golang.org/x/tools/gopls
 
 # Local provisioner?
-if [ -x ./provision-local.sh ]; then
-	./provision-local.sh
+if [ -x .devcontainer/provision-local.sh ]; then
+	.devcontainer/provision-local.sh
 fi

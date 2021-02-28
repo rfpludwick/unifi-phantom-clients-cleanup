@@ -3,6 +3,6 @@
 set -e
 
 # Local initializer?
-if [ -x ./initialize-local.sh ]; then
-	./initialize-local.sh
+if [ -x .devcontainer/initialize-local.sh ]; then
+	.devcontainer/initialize-local.sh
 fi

@@ -1,3 +1,4 @@
+.devcontainer/.bash-config/
 .devcontainer/*-local.sh
 bin/
 configuration.json
