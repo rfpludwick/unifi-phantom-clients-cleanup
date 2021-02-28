@@ -1,3 +1,4 @@
+.devcontainer/*-local.sh
 bin/
 configuration.json
 pkg/

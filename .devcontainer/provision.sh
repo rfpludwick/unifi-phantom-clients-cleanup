@@ -14,3 +14,8 @@ go get -v github.com/ramya-rao-a/go-outline
 go get -v github.com/go-delve/delve/cmd/dlv
 go get -v golang.org/x/lint/golint
 go get -v golang.org/x/tools/gopls
+
+# Local provisioner?
+if [ -x ./provision-local.sh ]; then
+	./provision-local.sh
+fi

@@ -1,8 +1,9 @@
 {
 	"image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu-20.04",
 	"postCreateCommand": "bash .devcontainer/provision.sh",
+	"initializeCommand": "bash .devcontainer/initialize.sh",
 	"containerEnv": {
-		"GOPATH": "/workspaces/unifi-phantom-clients-cleanup"
+		"GOPATH": "${containerWorkspaceFolder}"
 	},
 	"extensions": [
 		"github.vscode-pull-request-github",
