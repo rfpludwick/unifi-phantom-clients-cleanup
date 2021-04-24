@@ -3,3 +3,4 @@
 bin/
 configuration.json
 pkg/
+unifi-phantom-clients-cleanup

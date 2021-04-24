@@ -2,6 +2,9 @@
 	"image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu-20.04",
 	"postCreateCommand": "bash .devcontainer/provision.sh",
 	"initializeCommand": "bash .devcontainer/initialize.sh",
+	"remoteEnv": {
+		"PATH": "${containerEnv:PATH}:/usr/local/go/bin"
+	},
 	"extensions": [
 		"github.vscode-pull-request-github",
 		"eamodio.gitlens",
