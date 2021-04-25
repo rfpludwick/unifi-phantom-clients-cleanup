@@ -2,5 +2,4 @@
 .devcontainer/*-local.sh
 bin/
 configuration.json
-pkg/
 unifi-phantom-clients-cleanup
