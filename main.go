@@ -172,7 +172,7 @@ func exec() int {
 		lowBound := 0
 		highBound := pageSize
 
-		for highBound < numberMacsToForget {
+		for lowBound < numberMacsToForget {
 			if highBound > numberMacsToForget {
 				highBound = numberMacsToForget
 			}
