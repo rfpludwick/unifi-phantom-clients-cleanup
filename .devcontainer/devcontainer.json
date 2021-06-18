@@ -1,15 +1,16 @@
 {
-	"image": "mcr.microsoft.com/vscode/devcontainers/base:ubuntu-20.04",
+	"image": "${localEnv:RFPLUDWICK_NEXUS_HOSTNAME}/vscode/base:latest",
 	"postCreateCommand": "bash .devcontainer/provision.sh",
 	"initializeCommand": "bash .devcontainer/initialize.sh",
-	"remoteEnv": {
-		"PATH": "${containerEnv:PATH}:/usr/local/go/bin"
-	},
 	"extensions": [
 		"github.vscode-pull-request-github",
 		"eamodio.gitlens",
 		"golang.go",
 		"timonwong.shellcheck",
 		"davidanson.vscode-markdownlint"
-	]
+	],
+	"remoteEnv": {
+		"TZ": "America/Los_Angeles",
+		"PATH": "${containerEnv:PATH}:/usr/local/go/bin"
+	},
 }

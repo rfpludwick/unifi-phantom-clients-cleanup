@@ -1,0 +1,48 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run YAML linting",
+			"type": "shell",
+			"command": "yamllint .",
+			"group": "test",
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"label": "Run Markdown linting",
+			"type": "shell",
+			"command": "markdownlint -c .markdownlint.yaml *.md **/*.md",
+			"group": "test",
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"label": "Run shell linting",
+			"type": "shell",
+			"command": "find -name *.sh | xargs shellcheck",
+			"group": "test",
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "new"
+			}
+		},
+		{
+			"label": "Run all linting",
+			"problemMatcher": [],
+			"dependsOrder": "sequence",
+			"dependsOn": [
+				"Run YAML linting",
+				"Run Markdown linting",
+				"Run shell linting"
+			]
+		}
+	]
+}
