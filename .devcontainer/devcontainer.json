@@ -3,6 +3,7 @@
 	"postCreateCommand": "bash .devcontainer/provision.sh",
 	"initializeCommand": "bash .devcontainer/initialize.sh",
 	"extensions": [
+		"oderwat.indent-rainbow",
 		"github.vscode-pull-request-github",
 		"eamodio.gitlens",
 		"golang.go",
