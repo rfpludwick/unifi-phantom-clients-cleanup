@@ -4,6 +4,7 @@
 	"initializeCommand": "bash .devcontainer/initialize.sh",
 	"extensions": [
 		"oderwat.indent-rainbow",
+		"streetsidesoftware.code-spell-checker",
 		"github.vscode-pull-request-github",
 		"eamodio.gitlens",
 		"golang.go",
