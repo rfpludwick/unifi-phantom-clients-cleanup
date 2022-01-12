@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -22,11 +23,13 @@ type configuration struct {
 var (
 	showHelp              = false
 	configurationFilename = "configuration.json"
+	noCheckCert           = false
 )
 
 func init() {
 	getopt.FlagLong(&showHelp, "help", 'h', "Show help")
 	getopt.FlagLong(&configurationFilename, "config", 'c', "Path to the configuration file")
+	getopt.FlagLong(&noCheckCert, "no-check-cert", 0, "Don't check server TLS certificate")
 }
 
 func main() {
@@ -68,8 +71,18 @@ func exec() int {
 		return 1
 	}
 
+	// Don't verify TLS certs...
+	tls := &tls.Config { };
+	if (noCheckCert) {
+		tls.InsecureSkipVerify = true;
+	}
+
+	// Get TLS transport
+	tr := &http.Transport{TLSClientConfig: tls}
+
 	httpClient := &http.Client{
 		Jar: cookieJar,
+		Transport: tr,
 	}
 
 	requestBodyLogin, err := json.Marshal(unifiRequestLogin{
