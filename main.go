@@ -24,12 +24,14 @@ var (
 	showHelp              = false
 	configurationFilename = "configuration.json"
 	noCheckCert           = false
+	verbose               = false
 )
 
 func init() {
 	getopt.FlagLong(&showHelp, "help", 'h', "Show help")
 	getopt.FlagLong(&configurationFilename, "config", 'c', "Path to the configuration file")
 	getopt.FlagLong(&noCheckCert, "no-check-cert", 0, "Don't check server TLS certificate")
+	getopt.FlagLong(&verbose, "verbose", 'v', "Verbose output")
 }
 
 func main() {
@@ -132,6 +134,10 @@ func exec() int {
 		return 1
 	}
 
+	if (verbose) {
+		fmt.Fprintln(os.Stdout, "Login complete");
+	}
+
 	httpResponse, err = httpClient.Get(c.Host + "/api/s/" + c.Site + "/stat/alluser")
 
 	if err != nil {
@@ -168,17 +174,32 @@ func exec() int {
 		return 1
 	}
 
-	var macsToForget []string
+	if (verbose) {
+		fmt.Fprintln(os.Stdout, "Alluser retrieval complete");
+	}
 
+	var macsToForget []string
+	var numberMacs int
+
+	numberMacs = 0
 	for _, user := range responseAllUser.Data {
 		var sum = len(user.Name) + user.TxBytes + user.TxPackets + user.RxBytes + user.RxPackets + user.WifiTxAttempts + user.TxRetries
 
 		if sum == 0 {
 			macsToForget = append(macsToForget, user.Mac)
 		}
+		numberMacs++
+	}
+
+	if (verbose) {
+		fmt.Fprintf(os.Stdout, "%d MACs found\n", numberMacs);
 	}
 
 	numberMacsToForget := len(macsToForget)
+
+	if (verbose) {
+		fmt.Fprintf(os.Stdout, "%d MACs to forget\n", numberMacsToForget);
+	}
 
 	if numberMacsToForget > 0 {
 		pageSize := 25
@@ -237,6 +258,12 @@ func exec() int {
 				fmt.Fprintln(os.Stderr, err)
 
 				return 1
+			}
+
+			if (verbose) {
+				fmt.Fprintf(os.Stdout,
+					"Sta-forget complete for %d - %d\n",
+					lowBound, highBound);
 			}
 
 			lowBound = lowBound + pageSize
