@@ -14,6 +14,10 @@ type unifiRequestStamgr struct {
 	Macs []string `json:"macs"`
 }
 
+type unifiResponseLogin struct {
+	UniqueId string `json:"unique_id"`
+}
+
 type unifiResponseBase struct {
 	Meta unifiResponseBaseMeta `json:"meta"`
 }
@@ -39,13 +43,13 @@ type unifiResponseAllUserClient struct {
 	TxRetries      int    `json:"tx_retries"`
 }
 
-func unifiResponseCheckMeta(u unifiResponseBaseMeta, responseBody []byte) error {
+func unifiResponseCheckMeta(u unifiResponseBaseMeta, responseBody []byte, identifier string) error {
 	if u.Rc == "error" {
-		return fmt.Errorf("%s %s", "Error in UniFi response:", u.Msg)
+		return fmt.Errorf("%s %s %s %s", "Error in UniFi", identifier, "response:", u.Msg)
 	}
 
 	if u.Rc != "ok" {
-		return fmt.Errorf("%s %s", "Error with unexpected UniFi response:", string(responseBody))
+		return fmt.Errorf("%s %s %s %s", "Error with unexpected UniFi", identifier, "response:", string(responseBody))
 	}
 
 	return nil

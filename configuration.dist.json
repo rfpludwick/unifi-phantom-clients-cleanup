@@ -2,5 +2,6 @@
     "host": "",
     "site": "",
     "username": "",
-    "password": ""
+    "password": "",
+    "udmp": false
 }

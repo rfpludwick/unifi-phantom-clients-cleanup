@@ -15,9 +15,11 @@ import (
 
 type configuration struct {
 	Host     string
+	ApiHost  string
 	Site     string
 	Username string
 	Password string
+	Udmp     bool
 }
 
 var (
@@ -65,6 +67,12 @@ func exec() int {
 		return 1
 	}
 
+	c.ApiHost = c.Host
+
+	if c.Udmp {
+		c.ApiHost = c.ApiHost + "/proxy/network"
+	}
+
 	cookieJar, err := cookiejar.New(nil)
 
 	if err != nil {
@@ -74,16 +82,16 @@ func exec() int {
 	}
 
 	// Don't verify TLS certs...
-	tls := &tls.Config { };
-	if (noCheckCert) {
-		tls.InsecureSkipVerify = true;
+	tls := &tls.Config{}
+	if noCheckCert {
+		tls.InsecureSkipVerify = true
 	}
 
 	// Get TLS transport
 	tr := &http.Transport{TLSClientConfig: tls}
 
 	httpClient := &http.Client{
-		Jar: cookieJar,
+		Jar:       cookieJar,
 		Transport: tr,
 	}
 
@@ -98,7 +106,15 @@ func exec() int {
 		return 1
 	}
 
-	httpResponse, err := httpClient.Post(c.Host+"/api/login", "application/json", bytes.NewBuffer(requestBodyLogin))
+	loginPath := c.Host
+
+	if c.Udmp {
+		loginPath = loginPath + "/api/auth/login"
+	} else {
+		loginPath = loginPath + "/api/login"
+	}
+
+	httpResponse, err := httpClient.Post(loginPath, "application/json", bytes.NewBuffer(requestBodyLogin))
 
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error communicating host for UniFi login:", err)
@@ -116,7 +132,7 @@ func exec() int {
 		return 1
 	}
 
-	responseLogin := unifiResponseBase{}
+	responseLogin := unifiResponseLogin{}
 
 	err = json.Unmarshal(responseBodyLogin, &responseLogin)
 
@@ -126,19 +142,25 @@ func exec() int {
 		return 1
 	}
 
-	err = unifiResponseCheckMeta(responseLogin.Meta, responseBodyLogin)
-
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	if responseLogin.UniqueId == "" {
+		fmt.Fprintln(os.Stderr, "Error determining UniFi unique ID")
 
 		return 1
 	}
 
-	if (verbose) {
-		fmt.Fprintln(os.Stdout, "Login complete");
+	csrfTokenLogin := httpResponse.Header.Get("X-Csrf-Token")
+
+	if csrfTokenLogin == "" {
+		fmt.Fprintln(os.Stderr, "Error determining UniFi CSRF token")
+
+		return 1
 	}
 
-	httpResponse, err = httpClient.Get(c.Host + "/api/s/" + c.Site + "/stat/alluser")
+	if verbose {
+		fmt.Fprintln(os.Stdout, "Login complete")
+	}
+
+	httpResponse, err = httpClient.Get(c.ApiHost + "/api/s/" + c.Site + "/stat/alluser")
 
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error communicating host UniFi alluser:", err)
@@ -151,7 +173,7 @@ func exec() int {
 	responseBodyAllUser, err := ioutil.ReadAll(httpResponse.Body)
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error reading UniFi allsuer response:", err)
+		fmt.Fprintln(os.Stderr, "Error reading UniFi alluser response:", err)
 
 		return 1
 	}
@@ -166,7 +188,7 @@ func exec() int {
 		return 1
 	}
 
-	err = unifiResponseCheckMeta(responseAllUser.Meta, responseBodyAllUser)
+	err = unifiResponseCheckMeta(responseAllUser.Meta, responseBodyAllUser, "alluser")
 
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -174,14 +196,14 @@ func exec() int {
 		return 1
 	}
 
-	if (verbose) {
-		fmt.Fprintln(os.Stdout, "Alluser retrieval complete");
+	if verbose {
+		fmt.Fprintln(os.Stdout, "Alluser retrieval complete")
 	}
 
 	var macsToForget []string
-	var numberMacs int
 
-	numberMacs = 0
+	numberMacs := 0
+
 	for _, user := range responseAllUser.Data {
 		var sum = len(user.Name) + user.TxBytes + user.TxPackets + user.RxBytes + user.RxPackets + user.WifiTxAttempts + user.TxRetries
 
@@ -191,14 +213,14 @@ func exec() int {
 		numberMacs++
 	}
 
-	if (verbose) {
-		fmt.Fprintf(os.Stdout, "%d MACs found\n", numberMacs);
+	if verbose {
+		fmt.Fprintf(os.Stdout, "%d MACs found\n", numberMacs)
 	}
 
 	numberMacsToForget := len(macsToForget)
 
-	if (verbose) {
-		fmt.Fprintf(os.Stdout, "%d MACs to forget\n", numberMacsToForget);
+	if verbose {
+		fmt.Fprintf(os.Stdout, "%d MACs to forget\n", numberMacsToForget)
 	}
 
 	if numberMacsToForget > 0 {
@@ -224,7 +246,18 @@ func exec() int {
 				return 1
 			}
 
-			httpResponse, err := httpClient.Post(c.Host+"/api/s/"+c.Site+"/cmd/stamgr", "application/json", bytes.NewBuffer(requestBodyStamgrForget))
+			httpRequest, err := http.NewRequest("POST", c.ApiHost+"/api/s/"+c.Site+"/cmd/stamgr", bytes.NewBuffer(requestBodyStamgrForget))
+
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Error preparing request for UniFi stamgr:", err)
+
+				return 1
+			}
+
+			httpRequest.Header.Add("Content-Type", "application/json")
+			httpRequest.Header.Add("X-CSRF-Token", csrfTokenLogin)
+
+			httpResponse, err := httpClient.Do(httpRequest)
 
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "Error communicating host for UniFi stamgr:", err)
@@ -247,12 +280,12 @@ func exec() int {
 			err = json.Unmarshal(responseBodyStamgr, &responseStamgr)
 
 			if err != nil {
-				fmt.Fprintln(os.Stderr, "Error decoding UniFi stamgr response:", err)
+				fmt.Fprintln(os.Stderr, "Error decoding UniFi stamgr response:", err, ";", string(responseBodyStamgr))
 
 				return 1
 			}
 
-			err = unifiResponseCheckMeta(responseStamgr.Meta, responseBodyStamgr)
+			err = unifiResponseCheckMeta(responseStamgr.Meta, responseBodyStamgr, "stamgr")
 
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
@@ -260,14 +293,18 @@ func exec() int {
 				return 1
 			}
 
-			if (verbose) {
+			if verbose {
 				fmt.Fprintf(os.Stdout,
 					"Sta-forget complete for %d - %d\n",
-					lowBound, highBound);
+					lowBound, highBound)
 			}
 
 			lowBound = lowBound + pageSize
 			highBound = lowBound + pageSize
+		}
+
+		if verbose {
+			fmt.Printf("%s %d %s", "Forgot", numberMacsToForget, "devices")
 		}
 	}
 

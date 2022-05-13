@@ -9,7 +9,8 @@
 		"eamodio.gitlens",
 		"golang.go",
 		"timonwong.shellcheck",
-		"davidanson.vscode-markdownlint"
+		"davidanson.vscode-markdownlint",
+		"redhat.vscode-yaml"
 	],
 	"remoteEnv": {
 		"TZ": "America/Los_Angeles",
