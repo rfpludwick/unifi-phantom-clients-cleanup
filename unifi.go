@@ -10,8 +10,8 @@ type unifiRequestLogin struct {
 }
 
 type unifiRequestStamgr struct {
-	Cmd  string   `json:"cmd"`
-	Macs []string `json:"macs"`
+	Cmd  string
+	Macs []string
 }
 
 type unifiResponseLogin struct {
@@ -19,28 +19,28 @@ type unifiResponseLogin struct {
 }
 
 type unifiResponseBase struct {
-	Meta unifiResponseBaseMeta `json:"meta"`
+	Meta unifiResponseBaseMeta
 }
 
 type unifiResponseBaseMeta struct {
-	Rc  string `json:"rc"`
-	Msg string `json:"msg"`
+	Rc  string
+	Msg string
 }
 
 type unifiResponseAllUser struct {
-	Meta unifiResponseBaseMeta        `json:"meta"`
-	Data []unifiResponseAllUserClient `json:"data"`
+	Meta unifiResponseBaseMeta
+	Data []unifiResponseAllUserClient
 }
 
 type unifiResponseAllUserClient struct {
-	Name           string `json:"name"`
-	Mac            string `json:"mac"`
-	TxBytes        int    `json:"tx_bytes"`
-	TxPackets      int    `json:"tx_packets"`
-	RxBytes        int    `json:"rx_bytes"`
-	RxPackets      int    `json:"rx_packets"`
-	WifiTxAttempts int    `json:"wifi_tx_attempts"`
-	TxRetries      int    `json:"tx_retries"`
+	Name           string
+	Mac            string
+	TxBytes        int `json:"tx_bytes"`
+	TxPackets      int `json:"tx_packets"`
+	RxBytes        int `json:"rx_bytes"`
+	RxPackets      int `json:"rx_packets"`
+	WifiTxAttempts int `json:"wifi_tx_attempts"`
+	TxRetries      int `json:"tx_retries"`
 }
 
 func unifiResponseCheckMeta(u unifiResponseBaseMeta, responseBody []byte, identifier string) error {

@@ -17,7 +17,7 @@ with my UniFi Controller, these clients make their way into my Home Assistant
 entities. Manual cleanup in **both** systems is extremely tedious and annoying.
 I have also heard these phantom clients can be caused by hardware running iOS.
 
-Thus, this project. It's my first project in Go, so please, don't judge me too
+Thus, this project. It was my first project in Go, so please, don't judge me too
 harshly; I know some of the approach here is pretty simplistic. All it does is
 logs in to the UniFi Controller, gets the list of clients, and checks them for
 any network activity or custom name. If they have no network activity and no
@@ -26,24 +26,17 @@ custom name, then they are summarily removed from the UniFi Controller.
 If you want to use this, by all means, but I take no responsibility if it causes
 problems with your UniFi Controller. Just download the source, build it for your
 target, and run it. It'll need a configuration JSON (defaults to reading
-`configuration.json` in the same directory as the executable):
+`configuration.json` in the same directory as the executable), and you can see
+the default distribution configuration JSON at `configuration.dist.json`. YAML
+is supported as well.
 
-```json
-{
-    "host": "",
-    "site": "",
-    "username": "",
-    "password": ""
-}
-```
-
-And invoke it so (Linux example here):
+Invoke it so (Linux example here):
 
 ```shell
 ./<executable>
 ```
 
-That's it. It implements *getopt* as well, so if you want to see what options
+That's it. It implements *flag* as well, so if you want to see what options
 are available:
 
 ```shell

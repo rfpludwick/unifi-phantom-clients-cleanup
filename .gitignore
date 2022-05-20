@@ -1,4 +1,5 @@
 .devcontainer/*-local.sh
 bin/
-configuration.json
+conf/configuration.yaml
+conf/configuration.json
 unifi-phantom-clients-cleanup

@@ -1,0 +1,14 @@
+{
+    "version": "0.2",
+    "httpLogDirectory": "",
+    "sites": [
+        {
+            "host": "",
+            "site": "",
+            "username": "",
+            "password": "",
+            "udmp": false,
+            "validateCertificate": true
+        }
+    ]
+}
