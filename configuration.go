@@ -9,6 +9,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type ConfigurationFileVersionDetect struct {
+	Version string
+}
+
 type ConfigurationFile struct {
 	Version          string
 	HttpLogDirectory string `yaml:"httpLogDirectory"`
@@ -37,8 +41,8 @@ func initConfiguration() {
 	flag.BoolVar(&flagShowHelp, "help", false, "Show help")
 	flag.BoolVar(&flagVerboseOutput, "verbose", false, "Show verbose output")
 	flag.StringVar(&flagConfigurationFilename, "config", "conf/configuration.yaml", "Path to the configuration file to load")
-	flag.StringVar(&flagConfigurationType, "config-type", "yaml", "The type of configuration file <json|yaml>")
-	flag.StringVar(&flagConfigurationFileVersion, "config-version", "0.2", "The version of the configuration file")
+	flag.StringVar(&flagConfigurationType, "config-type", "yaml", "The type of configuration file <yaml|json>")
+	flag.StringVar(&flagConfigurationFileVersion, "config-version", "detect", "The version of the configuration file")
 }
 
 func processConfiguration() (*ConfigurationFile, error) {
@@ -59,28 +63,55 @@ func processConfiguration() (*ConfigurationFile, error) {
 	var cf ConfigurationFile
 
 	switch {
-	case flagConfigurationType == "json":
+	case flagConfigurationType == "yaml":
+		if flagConfigurationFileVersion == "detect" {
+			var cfvd ConfigurationFileVersionDetect
+
+			err = yaml.Unmarshal(configurationFileBody, &cfvd)
+
+			if err != nil {
+				return nil, fmt.Errorf("%s %s", "Error decoding configuration YAML for version detection:", err)
+			}
+
+			flagConfigurationFileVersion = cfvd.Version
+		}
+
 		switch {
-		case flagConfigurationFileVersion == "0.1":
-			var cfs ConfigurationFileSite
-
-			err = json.Unmarshal(configurationFileBody, &cfs)
-
-			cf.Sites = []ConfigurationFileSite{cfs}
 		case flagConfigurationFileVersion == "0.2":
-			err = json.Unmarshal(configurationFileBody, &cf)
+			err = processConfigurationYaml02(configurationFileBody, &cf)
+		case flagConfigurationFileVersion == "0.1":
+			return nil, fmt.Errorf("%s %s", "YAML does not support configuration file verion 0.1:", flagConfigurationFileVersion)
 		default:
-			return nil, fmt.Errorf("%s %s", "Unsupported configuration file version:", flagConfigurationFileVersion)
+			return nil, fmt.Errorf("%s %s", "Unsupported YAML configuration file version:", flagConfigurationFileVersion)
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("%s %s", "Error decoding configuration YAML:", err)
+		}
+	case flagConfigurationType == "json":
+		if flagConfigurationFileVersion == "detect" {
+			var cfvd ConfigurationFileVersionDetect
+
+			err = json.Unmarshal(configurationFileBody, &cfvd)
+
+			if err != nil {
+				return nil, fmt.Errorf("%s %s", "Error decoding configuration JSON for version detection:", err)
+			}
+
+			flagConfigurationFileVersion = cfvd.Version
+		}
+
+		switch {
+		case flagConfigurationFileVersion == "0.2":
+			err = processConfigurationJson02(configurationFileBody, &cf)
+		case flagConfigurationFileVersion == "0.1":
+			err = processConfigurationJson01(configurationFileBody, &cf)
+		default:
+			return nil, fmt.Errorf("%s %s", "Unsupported JSON configuration file version:", flagConfigurationFileVersion)
 		}
 
 		if err != nil {
 			return nil, fmt.Errorf("%s %s", "Error decoding configuration JSON:", err)
-		}
-	case flagConfigurationType == "yaml":
-		err = yaml.Unmarshal(configurationFileBody, &cf)
-
-		if err != nil {
-			return nil, fmt.Errorf("%s %s", "Error decoding configuration YAML:", err)
 		}
 	}
 
@@ -101,4 +132,26 @@ func processConfiguration() (*ConfigurationFile, error) {
 	}
 
 	return &cf, nil
+}
+
+func processConfigurationYaml02(configurationFileBody []byte, cf *ConfigurationFile) error {
+	return yaml.Unmarshal(configurationFileBody, &cf)
+}
+
+func processConfigurationJson02(configurationFileBody []byte, cf *ConfigurationFile) error {
+	return json.Unmarshal(configurationFileBody, &cf)
+}
+
+func processConfigurationJson01(configurationFileBody []byte, cf *ConfigurationFile) error {
+	var cfs ConfigurationFileSite
+
+	err := json.Unmarshal(configurationFileBody, &cfs)
+
+	if err != nil {
+		return err
+	}
+
+	cf.Sites = []ConfigurationFileSite{cfs}
+
+	return nil
 }
