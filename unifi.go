@@ -10,8 +10,8 @@ type unifiRequestLogin struct {
 }
 
 type unifiRequestStamgr struct {
-	Cmd  string
-	Macs []string
+	Cmd  string   `json:"cmd"`
+	Macs []string `json:"macs"`
 }
 
 type unifiResponseLogin struct {
