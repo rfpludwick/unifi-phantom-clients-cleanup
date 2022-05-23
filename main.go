@@ -256,7 +256,7 @@ func exec() error {
 			}
 
 			if flagVerboseOutput {
-				fmt.Printf("%s %d %s", "Forgot", numberClientsToForget, "devices")
+				fmt.Printf("%s %d %s\n", "Forgot", numberClientsToForget, "devices")
 			}
 		}
 
