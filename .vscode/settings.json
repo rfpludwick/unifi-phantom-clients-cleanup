@@ -1,5 +1,4 @@
 {
 	"window.title": "${activeEditorMedium}${dirty}${separator}UniFi Phantom Clients Cleanup${separator}${appName}",
-	"git.ignoreLimitWarning": true,
-	"go.toolsGopath": "/usr/lib/go"
+	"git.ignoreLimitWarning": true
 }
