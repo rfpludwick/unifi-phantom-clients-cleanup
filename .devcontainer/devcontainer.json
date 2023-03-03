@@ -14,6 +14,8 @@
 	],
 	"remoteEnv": {
 		"TZ": "America/Los_Angeles",
-		"PATH": "${containerEnv:PATH}:/usr/local/go/bin"
+		"PATH": "${containerEnv:PATH}:/usr/local/go/bin",
+		"VAULT_ADDR": "${localEnv:VAULT_ADDR}",
+		"VAULT_GITHUB_TOKEN": "${localEnv:VAULT_GITHUB_TOKEN}"
 	},
 }
