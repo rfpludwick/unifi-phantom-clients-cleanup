@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
-set -o pipefail
+set -exo pipefail
 
 # Local initializer?
 if [ -x .devcontainer/initialize-local.sh ]; then

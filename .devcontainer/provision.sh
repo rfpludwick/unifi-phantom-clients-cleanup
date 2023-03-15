@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
-set -o pipefail
+set -exo pipefail
 
 # Local provisioner?
 if [ -x .devcontainer/provision-local.sh ]; then
