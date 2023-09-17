@@ -109,7 +109,7 @@ func exec() error {
 		}
 
 		if responseLogin.UniqueId == "" {
-			logHttpCall(cF, []byte{}, httpResponse)
+			_ = logHttpCall(cF, []byte{}, httpResponse) // Ignore output as we already have an error
 
 			return fmt.Errorf("%s", "Error determining UniFi unique ID")
 		}
