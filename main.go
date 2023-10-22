@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+var (
+	countHttpCallLog = 0
+)
+
 func init() {
 	initConfiguration()
 }
@@ -109,8 +113,6 @@ func exec() error {
 		}
 
 		if responseLogin.UniqueId == "" {
-			_ = logHttpCall(cF, []byte{}, httpResponse) // Ignore output as we already have an error
-
 			return fmt.Errorf("%s", "Error determining UniFi unique ID")
 		}
 
@@ -270,7 +272,9 @@ func exec() error {
 
 func logHttpCall(cF *ConfigurationFile, httpRequestBody []byte, httpResponse *http.Response) error {
 	if cF.HttpLogDirectory != "" {
-		file, err := os.Create(fmt.Sprintf("%s/%s.log", cF.HttpLogDirectory, time.Now().Format("2006-01-02_15-04-05_-0700")))
+		countHttpCallLog++
+
+		file, err := os.Create(fmt.Sprintf("%s/%02d-%s.log", cF.HttpLogDirectory, countHttpCallLog, time.Now().Format("2006-01-02_15-04-05_-0700")))
 
 		if err != nil {
 			return fmt.Errorf("%s %s", "Error writing HTTP log file:", err)
