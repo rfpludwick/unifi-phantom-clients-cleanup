@@ -6,11 +6,11 @@
 		"oderwat.indent-rainbow",
 		"streetsidesoftware.code-spell-checker",
 		"github.vscode-pull-request-github",
-		"eamodio.gitlens",
 		"golang.go",
 		"timonwong.shellcheck",
 		"davidanson.vscode-markdownlint",
-		"redhat.vscode-yaml"
+		"redhat.vscode-yaml",
+		"mrmlnc.vscode-json5"
 	],
 	"remoteEnv": {
 		"VAULT_ADDR": "${localEnv:VAULT_ADDR}",
