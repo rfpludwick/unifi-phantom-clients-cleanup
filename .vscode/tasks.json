@@ -15,7 +15,7 @@
 		{
 			"label": "Run Markdown linting",
 			"type": "shell",
-			"command": "markdownlint --config .markdownlint.yaml ./*.md ./**/*.md",
+			"command": "mdl --style ./.mdlrc ./",
 			"group": "test",
 			"problemMatcher": [],
 			"presentation": {
@@ -26,7 +26,7 @@
 		{
 			"label": "Run shell linting",
 			"type": "shell",
-			"command": "find . -wholename \"./*.sh\" -print0 | xargs --null shellcheck",
+			"command": "find ./ -name .git -type d -prune -o -type f -name *.sh -print0 | xargs -0 -r -n1 -t shellcheck",
 			"group": "test",
 			"problemMatcher": [],
 			"presentation": {
