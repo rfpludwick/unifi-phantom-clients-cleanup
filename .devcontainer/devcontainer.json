@@ -10,7 +10,8 @@
 		"timonwong.shellcheck",
 		"davidanson.vscode-markdownlint",
 		"redhat.vscode-yaml",
-		"mrmlnc.vscode-json5"
+		"mrmlnc.vscode-json5",
+		"anthropic.claude-code"
 	],
 	"remoteEnv": {
 		"VAULT_ADDR": "${localEnv:VAULT_ADDR}",

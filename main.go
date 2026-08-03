@@ -168,12 +168,56 @@ func exec() error {
 
 		numberClients := 0
 
-		for _, user := range responseAllUser.Data {
-			var sum = len(user.Name) + user.TxBytes + user.TxPackets + user.RxBytes + user.RxPackets + user.WifiTxAttempts + user.TxRetries
+		trafficEnd := time.Now()
+		trafficStart := trafficEnd.AddDate(0, -1, 0)
 
-			if sum == 0 {
+		for _, user := range responseAllUser.Data {
+			trafficPath := fmt.Sprintf("%s/v2/api/site/%s/traffic/%s?start=%d&end=%d&includeUnidentified=true&mac=%s", cfSite.ApiHost, cfSite.Site, user.Mac, trafficStart.UnixMilli(), trafficEnd.UnixMilli(), user.Mac)
+
+			httpResponse, err := httpClient.Get(trafficPath)
+
+			if err != nil {
+				return fmt.Errorf("%s %s", "Error communicating host for UniFi traffic:", err)
+			}
+
+			err = logHttpCall(cF, []byte{}, httpResponse)
+
+			if err != nil {
+				return err
+			}
+
+			defer httpResponse.Body.Close()
+
+			responseBodyTraffic, err := io.ReadAll(httpResponse.Body)
+
+			if err != nil {
+				return fmt.Errorf("%s %s", "Error reading UniFi traffic response:", err)
+			}
+
+			responseTraffic := unifiResponseTraffic{}
+
+			err = json.Unmarshal(responseBodyTraffic, &responseTraffic)
+
+			if err != nil {
+				return fmt.Errorf("%s %s", "Error decoding UniFi traffic response:", err)
+			}
+
+			var sum = len(user.Name)
+
+			var sumBytesReceived int
+			var sumBytesTransmitted int
+
+			for _, clientUsage := range responseTraffic.ClientUsageByApp {
+				for _, usage := range clientUsage.UsageByApp {
+					sumBytesReceived += usage.BytesReceived
+					sumBytesTransmitted += usage.BytesTransmitted
+				}
+			}
+
+			if sum == 0 && ((sumBytesReceived == 0) && (sumBytesTransmitted == 0)) {
 				clientsToForget = append(clientsToForget, user.Mac)
 			}
+
 			numberClients++
 		}
 
