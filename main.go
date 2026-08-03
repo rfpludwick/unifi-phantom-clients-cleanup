@@ -96,7 +96,7 @@ func exec() error {
 			return err
 		}
 
-		defer httpResponse.Body.Close()
+		defer func(body io.Closer) { _ = body.Close() }(httpResponse.Body)
 
 		responseBodyLogin, err := io.ReadAll(httpResponse.Body)
 
@@ -123,7 +123,7 @@ func exec() error {
 		}
 
 		if flagVerboseOutput {
-			fmt.Fprintln(os.Stdout, "Login complete")
+			_, _ = fmt.Fprintln(os.Stdout, "Login complete")
 		}
 
 		httpResponse, err = httpClient.Get(cfSite.ApiHost + "/api/s/" + cfSite.Site + "/stat/alluser")
@@ -138,7 +138,7 @@ func exec() error {
 			return err
 		}
 
-		defer httpResponse.Body.Close()
+		defer func(body io.Closer) { _ = body.Close() }(httpResponse.Body)
 
 		responseBodyAllUser, err := io.ReadAll(httpResponse.Body)
 
@@ -161,7 +161,7 @@ func exec() error {
 		}
 
 		if flagVerboseOutput {
-			fmt.Fprintln(os.Stdout, "Alluser retrieval complete")
+			_, _ = fmt.Fprintln(os.Stdout, "Alluser retrieval complete")
 		}
 
 		var clientsToForget []string
@@ -186,7 +186,7 @@ func exec() error {
 				return err
 			}
 
-			defer httpResponse.Body.Close()
+			defer func(body io.Closer) { _ = body.Close() }(httpResponse.Body)
 
 			responseBodyTraffic, err := io.ReadAll(httpResponse.Body)
 
@@ -273,7 +273,7 @@ func exec() error {
 					return err
 				}
 
-				defer httpResponse.Body.Close()
+				defer func(body io.Closer) { _ = body.Close() }(httpResponse.Body)
 
 				responseBodyStamgr, err := io.ReadAll(httpResponse.Body)
 
@@ -324,7 +324,7 @@ func logHttpCall(cF *ConfigurationFile, httpRequestBody []byte, httpResponse *ht
 			return fmt.Errorf("%s %s", "Error writing HTTP log file:", err)
 		}
 
-		defer file.Close()
+		defer func() { _ = file.Close() }()
 
 		responseBody, err := io.ReadAll(httpResponse.Body)
 
@@ -332,13 +332,13 @@ func logHttpCall(cF *ConfigurationFile, httpRequestBody []byte, httpResponse *ht
 			return fmt.Errorf("%s %s", "Error reading HTTP response body:", err)
 		}
 
-		fmt.Fprintf(file, "Request\n\n%+v\n\n", httpResponse.Request)
-		fmt.Fprintf(file, "Request Body\n\n%+v\n\n", string(httpRequestBody))
-		fmt.Fprintf(file, "Response\n\n%+v\n\n", httpResponse)
-		fmt.Fprintf(file, "Response Body\n\n%+v\n\n", string(responseBody))
-		fmt.Fprintf(file, "TLS\n\n%+v", httpResponse.TLS)
+		_, _ = fmt.Fprintf(file, "Request\n\n%+v\n\n", httpResponse.Request)
+		_, _ = fmt.Fprintf(file, "Request Body\n\n%+v\n\n", string(httpRequestBody))
+		_, _ = fmt.Fprintf(file, "Response\n\n%+v\n\n", httpResponse)
+		_, _ = fmt.Fprintf(file, "Response Body\n\n%+v\n\n", string(responseBody))
+		_, _ = fmt.Fprintf(file, "TLS\n\n%+v", httpResponse.TLS)
 
-		httpResponse.Body.Close()
+		_ = httpResponse.Body.Close()
 		httpResponse.Body = io.NopCloser(bytes.NewBuffer(responseBody))
 	}
 

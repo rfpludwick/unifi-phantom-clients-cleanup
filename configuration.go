@@ -62,8 +62,8 @@ func processConfiguration() (*ConfigurationFile, error) {
 
 	var cf ConfigurationFile
 
-	switch {
-	case flagConfigurationType == "yaml":
+	switch flagConfigurationType {
+	case "yaml":
 		if flagConfigurationFileVersion == "detect" {
 			var cfvd ConfigurationFileVersionDetect
 
@@ -76,10 +76,10 @@ func processConfiguration() (*ConfigurationFile, error) {
 			flagConfigurationFileVersion = cfvd.Version
 		}
 
-		switch {
-		case flagConfigurationFileVersion == "0.2":
+		switch flagConfigurationFileVersion {
+		case "0.2":
 			err = processConfigurationYaml02(configurationFileBody, &cf)
-		case flagConfigurationFileVersion == "0.1":
+		case "0.1":
 			return nil, fmt.Errorf("%s %s", "YAML does not support configuration file verion 0.1:", flagConfigurationFileVersion)
 		default:
 			return nil, fmt.Errorf("%s %s", "Unsupported YAML configuration file version:", flagConfigurationFileVersion)
@@ -88,7 +88,7 @@ func processConfiguration() (*ConfigurationFile, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s %s", "Error decoding configuration YAML:", err)
 		}
-	case flagConfigurationType == "json":
+	case "json":
 		if flagConfigurationFileVersion == "detect" {
 			var cfvd ConfigurationFileVersionDetect
 
@@ -101,10 +101,10 @@ func processConfiguration() (*ConfigurationFile, error) {
 			flagConfigurationFileVersion = cfvd.Version
 		}
 
-		switch {
-		case flagConfigurationFileVersion == "0.2":
+		switch flagConfigurationFileVersion {
+		case "0.2":
 			err = processConfigurationJson02(configurationFileBody, &cf)
-		case flagConfigurationFileVersion == "0.1":
+		case "0.1":
 			err = processConfigurationJson01(configurationFileBody, &cf)
 		default:
 			return nil, fmt.Errorf("%s %s", "Unsupported JSON configuration file version:", flagConfigurationFileVersion)
